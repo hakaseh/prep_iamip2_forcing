@@ -1,6 +1,8 @@
 #User input begins
 
-model=CMCC-ESM2
+
+#model=CMCC-ESM2
+model=MRI-ESM2-0
 exp=ssp585
 variant=r1i1p1f1
 #pr needs to be listed after prsn, as prra calculation depends on the latter.
@@ -12,7 +14,9 @@ flist=(3hr  Omon   6hrPlevPt 3hr 3hr 3hr 3hr  3hr  3hr  3hr)
 #loop through variables
 for v in "${!vlist[@]}"
 do
-	mkdir -p ${model}/${exp}/${vlist[v]}
+	#parallel compute the following block
+    {
+    mkdir -p ${model}/${exp}/${vlist[v]}
     mkdir -p ${model}/${exp}/tmp/raw_cat
     mkdir -p ${model}/${exp}/tmp/raw_each_year
     infile=${model}/${exp}/tmp/raw_cat/${vlist[v]}.nc
@@ -31,6 +35,16 @@ do
             fi 
         fi      
     fi
+    } &
+done
+
+wait
+
+#loop through variables
+for v in "${!vlist[@]}"
+do
+    {
+    infile=${model}/${exp}/tmp/raw_cat/${vlist[v]}.nc
 
     #loop through years
     for i in {2015..2100}
@@ -44,5 +58,5 @@ do
             mv $outfile.tmp $outfile
         fi
     done
-    echo ${vlist[v]},finished...
+    } &
 done

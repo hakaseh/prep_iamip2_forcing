@@ -1,10 +1,11 @@
 #User input begins
 
-model=CMCC-ESM2
+#model=CMCC-ESM2
+model=MRI-ESM2-0
 exp=ssp585
 variant=r1i1p1f1
-#Replace pr by prra. prra needs to be listed after prsn, as prra calculation depends on the latter.
-vlist=(huss friver psl       tas uas vas rsds rlds prsn prra)
+#pr needs to be listed after prsn, as prra calculation depends on the latter.
+vlist=(huss friver psl       tas uas vas rsds rlds prsn pr)
 flist=(3hr  Omon   6hrPlevPt 3hr 3hr 3hr 3hr  3hr  3hr  3hr)
 #Location of JRA55-do data for creating atmospheric and land grid files.
 fjraatm=/g/data/qv56/replicas/input4MIPs/CMIP6/OMIP/MRI/MRI-JRA55-do-1-4-0/atmos/3hrPt/tas/gr/v20190429/tas_input4MIPs_atmosphericState_OMIP_MRI-JRA55-do-1-4-0_gr_200001010000-200012312100.nc
@@ -16,13 +17,17 @@ fjralan=/g/data/qv56/replicas/input4MIPs/CMIP6/OMIP/MRI/MRI-JRA55-do-1-4-0/landI
 cdo griddes ${fjraatm} > jra_grid_atom.txt
 cdo griddes ${fjralan} > jra_grid_land.txt
 
+if [ 0 = 1 ]
+then
 #Loop through variables
-for v in 9 #"${!vlist[@]}"
+for v in "${!vlist[@]}"
 do
     mkdir -p ${model}/${exp}/${vlist[v]}
     #Loop through years
     for i in {2015..2100}
     do
+        #parallel compute
+        {
         infile=${model}/${exp}/tmp/raw_each_year/${vlist[v]}_${i}.nc
         outfile=${model}/${exp}/${vlist[v]}/${vlist[v]}_${flist[v]}_${model}_${exp}_${variant}_JRA_${i}.nc
                 
@@ -34,30 +39,37 @@ do
             cdo -fillmiss2 $outfile $outfile.tmp
             mv $outfile.tmp $outfile
 		else
-            #deriving prra from pr and prsn
-			if [ ${vlist[v]} = "prra" ]
-			then
-                inprsn=${model}/${exp}/tmp/raw_each_year/prsn_${i}.nc
-                inpr=${model}/${exp}/tmp/raw_each_year/pr_${i}.nc
-                cdo -O -merge $inprsn $inpr $infile
-                ncap2 -O -s "prra=pr-prsn" $infile $infile
-                ncks -O -v prra $infile $infile
-            fi
             #conservative remapping for all other variables
 			cdo -remapcon,jra_grid_atom.txt $infile $outfile
 		fi
         #modify calendar type to work with the model.
 		cdo -setcalendar,gregorian $outfile $outfile.tmp
 		mv $outfile.tmp $outfile
-		#force set prra and prsn to non-negative.
-        if [ ${vlist[v]} = "prra" ] || [ ${vlist[v]} = "prsn" ]
+		#force set pr and prsn to non-negative.
+        if [ ${vlist[v]} = "pr" ] || [ ${vlist[v]} = "prsn" ]
 		then
 			cdo setrtoc,-inf,0,0 $outfile $outfile.tmp
 			mv $outfile.tmp $outfile
 		fi
-        #deflate to save storage space.
-        #increasing to 9 did not improve data saving (at least for huss). Set to 1 for saving time.
-		ncks -O -L 1 $outfile $outfile
-		echo ${vlist[v]},$i,done
-	done
+        } &
+    done
+done
+fi
+
+#wait because prra calculation depends on pr and prsn
+wait
+
+#Derive prra from pr and prsn (do this separately because parallel computing does not work with ncap2 for some reason)
+mv ${model}/${exp}/pr ${model}/${exp}/tmp/
+mkdir -p ${model}/${exp}/prra
+#Loop through years
+for i in {2015..2100}
+do
+    inpr=${model}/${exp}/tmp/pr/pr_${flist[v]}_${model}_${exp}_${variant}_JRA_${i}.nc
+    inprsn=${model}/${exp}/prsn/prsn_${flist[v]}_${model}_${exp}_${variant}_JRA_${i}.nc
+    outfile=${model}/${exp}/prra/prra_${flist[v]}_${model}_${exp}_${variant}_JRA_${i}.nc
+
+    cdo -merge $inprsn $inpr $outfile
+    ncap2 -O -s "prra=pr-prsn" $outfile $outfile
+    ncks -O -v prra $outfile $outfile
 done
