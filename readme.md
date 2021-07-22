@@ -3,8 +3,9 @@
 
 # Steps
 
+1. If you are an NCI user, request NCI to download the CMIP6 data you need if they are not available (see https://clef.readthedocs.io/en/latest/gettingstarted.html).
 1. `bash link.sh` to create symbolic links in `raw` for data that are already available on your server (e.g. NCI for Australians).
-1. `bash wget.sh` to download data to `raw` that are not available your server.
+1. If you are NOT an NCI user, `bash wget.sh` to download data to `raw` that are not available your server. If you are an NCI user, it is recommended to request NCI to download the necessary data centrally (see the very first step above).
 1. `bash split.sh` to concatenate the raw files and then split into years (one file for one year of data).
 1. `bash remap.sh` to remap.
 1. `bash deflate.sh` to compress the output.

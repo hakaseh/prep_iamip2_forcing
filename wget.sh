@@ -2,12 +2,15 @@
 #wget*.sh files are the files you generate from the CMIP6 ESGF data archive when you want to download many files.
 
 #User input begins
-model=MRI-ESM2-0
-#model=CMCC-ESM2
-exp=ssp585
+
+model=EC-Earth3 #CMCC-ESM2 #MRI-ESM2-0
+exp=ssp126 #585
+
+#User input ends
 
 cd ${model}/${exp}/tmp/raw 
 for i in wget*.sh
 do
-    bash $i -H
+    #execute in background (&) for parallel computing
+    bash $i -H &
 done

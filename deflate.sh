@@ -1,8 +1,7 @@
 #User input begins
 
-#model=CMCC-ESM2
-model=MRI-ESM2-0
-exp=ssp585
+model=EC-Earth3 #CMCC-ESM2 #MRI-ESM2-0
+exp=ssp126 #585
 variant=r1i1p1f1
 vlist=(huss friver psl       tas uas vas rsds rlds prsn prra)
 flist=(3hr  Omon   6hrPlevPt 3hr 3hr 3hr 3hr  3hr  3hr  3hr)
