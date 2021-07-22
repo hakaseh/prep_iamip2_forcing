@@ -58,12 +58,6 @@ else
             {
             outfile=${model}/${exp}/tmp/raw_each_year/${vlist[v]}_${i}.nc
             cdo -selyear,$i/$i $infile $outfile
-            #extrapolate over land to avoid potential error when remapping
-            if [ ${vlist[v]} = 'friver' ]
-            then
-                cdo -fillmiss2 $outfile $outfile.tmp
-                mv $outfile.tmp $outfile
-            fi
             } &
         done
     done
