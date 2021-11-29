@@ -10,6 +10,7 @@
 1. `bash remap.sh` to remap.
 1. `bash deflate.sh` to compress the output.
 1. `licalvf.sh` to create data for `licalvf`.
+1. `bash chunk.sh` to change the chunk size for `prra` in the ssp126 data (if they were not sized properly). This step was necessary for `ACCESS-OM2`.
 1. `rm -r tmp` if you are happy with the output.
 
 ## A few notes
